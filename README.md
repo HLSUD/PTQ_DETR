@@ -1,4 +1,5 @@
-# Qunatization of Object Dection Transformer (DETR) series
+# Post Training Qunatization of Object Dection Transformer (DETR) series
 
 TO-DO LIST
-[] run huggingface DETR
+[x] run huggingface DETR
+[] Linear Quant
