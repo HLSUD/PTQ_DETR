@@ -1,0 +1,3 @@
+DEVICE=1
+
+CUDA_VISIBLE_DEVICES=$DEVICE python tmp.py
