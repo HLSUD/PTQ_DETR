@@ -6,12 +6,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 from itertools import product
 
-def get_conv_quant_modules(config):
+def get_conv_quant_modules(config, module, *args, **kwargs):
     # config2convkwargs
-    conv_kwargs ={} # not implemented!!!
+    conv_kwargs ={
+        "metric": config.metric,
+        "search_round": config.search_round,
+        "conv_eq_alpha": config.conv_eq_alpha,
+        "conv_eq_beta": config.conv_eq_beta,
+        "conv_eq_n": config.conv_eq_n,
+        "conv_n_V": config.conv_n_V,
+        "conv_n_H": config.conv_n_H
+    }
     kwargs.update(conv_kwargs)
-    module = ChannelwiseBatchingQuantConv2d(w_bit=config.w_bit,a_bit=32,*args, **kwargs)# turn off activation quantization
-
+    q_module = ChannelwiseBatchingQuantConv2d(module.in_channels, module.out_channels, module.kernel_size, module.stride, module.padding,
+                                            module.dilation, module.groups, module.bias, module.padding_mode, w_bit=config.w_bit, a_bit=32, **kwargs)# turn off activation quantization
+    return q_module
 
 class DETR_QUANT_CONV(PTQSLQuantConv2d):
     """
@@ -276,9 +285,11 @@ class ChannelwiseBatchingQuantConv2d(PTQSLQuantConv2d):
         padding_mode: str = 'zeros',mode='raw',w_bit=8,a_bit=8,bias_bit=None,
         metric="L2_norm", search_round=1, eq_alpha=0.1, eq_beta=2, eq_n=100, parallel_eq_n=10,
         n_V=1, n_H=1, init_layerwise=False):
-        super().__init__(in_channels, out_channels, kernel_size, stride=stride, padding=padding, dilation=dilation, groups=groups, bias=bias, padding_mode=padding_mode, 
-                         mode=mode, w_bit=w_bit, a_bit=a_bit, bias_bit=bias_bit, metric=metric, search_round=search_round, eq_alpha=eq_alpha, eq_beta=eq_beta, eq_n=eq_n, parallel_eq_n=parallel_eq_n,
-                         n_V=n_V, n_H=n_H, init_layerwise=init_layerwise)
+        super().__init__(in_channels, out_channels, kernel_size, stride=stride, padding=padding, 
+                         dilation=dilation, groups=groups, bias=bias, padding_mode=padding_mode, 
+                         mode=mode, w_bit=w_bit, a_bit=a_bit, bias_bit=bias_bit, metric=metric, 
+                         search_round=search_round, eq_alpha=eq_alpha, eq_beta=eq_beta, eq_n=eq_n,
+                         parallel_eq_n=parallel_eq_n, n_V=n_V, n_H=n_H, init_layerwise=init_layerwise)
         self.n_V = self.out_channels
         self.n_H = 1
     

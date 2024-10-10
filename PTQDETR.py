@@ -3,6 +3,7 @@ import torch.nn as nn
 import torchvision
 import transformers
 from transformers import AutoImageProcessor, DetrForObjectDetection, DetrForSegmentation
+from quant.q_conv import get_conv_quant_modules
 
 class PTQDETR():
     def __init__(self, model_name, w_bit, a_bit):
@@ -54,11 +55,12 @@ class PTQDETR():
             if isinstance(m,nn.Conv2d):
                 # Embedding Layer
                 idx = idx+1 if idx != 0 else idx
-                new_m=cfg.get_module("qconv",m.in_channels,m.out_channels,m.kernel_size,m.stride,m.padding,m.dilation,m.groups,m.bias is not None,m.padding_mode)
-                new_m.weight.data=m.weight.data
-                new_m.bias=m.bias
-                replace_m=new_m
-                wrapped_modules[name] = new_m
+                conv_module = get_conv_quant_modules(config, m)
+                # new_m=get_conv_quant_modules("qconv",m.in_channels,m.out_channels,m.kernel_size,m.stride,m.padding,m.dilation,m.groups,m.bias is not None,m.padding_mode)
+                conv_module.weight.data=m.weight.data
+                conv_module.bias=m.bias
+                replace_m=conv_module
+                wrapped_modules[name] = conv_module
                 setattr(father_module,name[idx:],replace_m)
             # elif isinstance(m,nn.Linear):
             #     # Linear Layer
@@ -78,7 +80,7 @@ class PTQDETR():
             #     wrapped_modules[name] = new_m
             #     setattr(father_module,name[idx:],replace_m)
         print("Completed net wrap.")
-        return
+        return wrapped_modules
     
     def model_calibration(self):
         return
