@@ -264,7 +264,7 @@ class COCOLoaderGenerator():
         val_dataloader =  DataLoader(self.test_set,  batch_size=self.test_batch_size, shuffle=False,  **self.test_loader_kwargs)
         return val_dataloader
 
-    def calib_loader(self,num=1024,seed=3):
+    def get_calib_loader(self,num=1024,seed=3):
         if self._calib_set is None:
             np.random.seed(seed)
             inds=np.random.permutation(len(self.train_set))[:num]
